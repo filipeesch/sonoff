@@ -3,6 +3,7 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
+#include "FS.h"
 //#include <ESP8266mDNS.h>
 
 #include "WebConfiguration.h"
@@ -18,6 +19,9 @@ const char *pwd = "wireless";
 void setup()
 {
     Serial.begin(9600);
+    //Serial.setDebugOutput(true);
+
+    Serial.println("FS Result: " + SPIFFS.begin());
 
     WiFi.begin(ssid, pwd);
 
