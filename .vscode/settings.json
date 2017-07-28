@@ -1,7 +1,0 @@
-{
-    "files.associations": {
-        "esp8266wifi.h": "c",
-        "esp8266wifitype.h": "c",
-        "wificlient.h": "c"
-    }
-}
