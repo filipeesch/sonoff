@@ -4,8 +4,11 @@
 #include "FS.h"
 
 #include "WebConfiguration.h"
+#include "ConfigurationManager.h"
 
-WebConfiguration::WebConfiguration(ESP8266WebServer &server) : server(server)
+WebConfiguration::WebConfiguration(
+    ESP8266WebServer &server,
+    ConfigurationManager &configManager) : server(server), configManager(configManager)
 {
 }
 
@@ -115,22 +118,12 @@ void WebConfiguration::saveWifiPage()
 {
     server.on("/wifi-save", [this]() {
 
-        auto ssid = server.arg("ssid");
-        auto password = server.arg("password");
+        WiFiConfiguration config;
 
-        auto file = SPIFFS.open("wifi.txt", "w+");
+        config.ssid = server.arg("ssid");
+        config.password = server.arg("password");
 
-        file.println(ssid);
-        file.println(password);
-
-        file.close();
-
-        auto f = SPIFFS.open("wifi.txt", "r");
-
-        ssid = f.readStringUntil('\n');
-        password = f.readStringUntil('\n');
-
-        f.close();
+        configManager.setWiFi(config);
 
         String body;
         body.reserve(1000);
@@ -139,8 +132,7 @@ void WebConfiguration::saveWifiPage()
 
         body.concat("<div>Wifi settings saved.</div>");
         body.concat("<div>SSID: ");
-        body.concat(ssid);
-        body.concat(password);
+        body.concat(config.ssid);
         body.concat("</div>");
 
         server.send(200, "text/html", body);

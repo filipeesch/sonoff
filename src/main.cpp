@@ -6,12 +6,13 @@
 #include "FS.h"
 //#include <ESP8266mDNS.h>
 
+#include "ConfigurationManager.h"
 #include "WebConfiguration.h"
 
-int status;
-
 ESP8266WebServer server(80);
-WebConfiguration webConfig(server);
+ConfigurationManager configManager;
+
+WebConfiguration webConfig(server, configManager);
 
 const char *ssid = "Esch";
 const char *pwd = "wireless";
@@ -19,12 +20,13 @@ const char *pwd = "wireless";
 void setup()
 {
     Serial.begin(9600);
-    //Serial.setDebugOutput(true);
 
-    Serial.println("FS Result: " + SPIFFS.begin());
+    if (!SPIFFS.begin())
+        Serial.println("Error on mounting FS!");
 
     WiFi.begin(ssid, pwd);
 
+    Serial.print("Connecting to Wi-Fi");
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(1000);
