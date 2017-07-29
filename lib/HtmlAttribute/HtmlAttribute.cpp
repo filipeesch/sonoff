@@ -13,9 +13,9 @@ HtmlAttribute::HtmlAttribute(String name, String value) : _name(name), _value(va
 int HtmlAttribute::contentSize()
 {
     if (_nameOnly)
-        return _name.size();
+        return _name.length();
     else
-        return _name.size() + _value.size() + 3;
+        return _name.length() + _value.length() + 3;
 }
 
 void HtmlAttribute::build(String &html)

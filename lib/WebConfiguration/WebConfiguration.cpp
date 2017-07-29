@@ -35,6 +35,15 @@ void WebConfiguration::masterPage(String &body)
 
     body.concat("<a href='/'>Home</a>");
 
+    HtmlDivElement div;
+    div.name("testeName");
+    div.id("testeId");
+
+    div.append(new HtmlInputElement("text", "testeName", String(ESP.getFreeHeap(), 10)));
+    div.append(new HtmlInputElement("text", "testeName2", "testeValue"));
+
+    div.build(body);
+
     if (WiFi.status() == WL_CONNECTED)
     {
         body.concat("<div>Conneted Wifi: ");

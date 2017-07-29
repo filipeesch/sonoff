@@ -1,6 +1,7 @@
 #ifndef WEB_CONFIGURATION_H
 #define WEB_CONFIGURATION_H
 
+#include "HtmlElements.h"
 #include "ConfigurationManager.h"
 
 class WebConfiguration

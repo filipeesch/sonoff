@@ -1,6 +1,8 @@
 #ifndef HTML_ATTRIBUTE_H
 #define HTML_ATTRIBUTE_H
 
+#include <WString.h>
+
 class HtmlAttribute
 {
     String _name;
