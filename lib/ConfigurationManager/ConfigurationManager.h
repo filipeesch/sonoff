@@ -5,7 +5,7 @@ struct MqttConfiguration
 {
     String name;
     String host;
-    int port;
+    int port = 0;
     String user;
     String password;
     String relayTopic;

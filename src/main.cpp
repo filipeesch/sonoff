@@ -5,6 +5,7 @@
 #include <ESP8266WebServer.h>
 #include <FS.h>
 #include <string.h>
+#include <Bounce2.h>
 //#include <ESP8266mDNS.h>
 
 #include <PubSubClient.h>
@@ -32,6 +33,9 @@ Timer wifiConnectedTimer(1000);
 Timer apModeTimer(5 * 60 * 1000);
 
 bool apModeOn = false, mqttEnabled = false;
+
+Bounce pin1, pin3, pin14;
+bool pin1Enabled = false, pin3Enabled = false, pin14Enabled = false;
 
 void enableAPMode()
 {
@@ -99,7 +103,7 @@ void mqtt_callback(const char *topic, byte *payload, unsigned int length)
         else
             digitalWrite(RELAY_PIN, !digitalRead(RELAY_PIN));
 
-        digitalWrite(STATUS_LED_PIN, digitalRead(RELAY_PIN));
+        digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN)));
 
         if (mqttConfig.relayStatusTopic != "")
         {
@@ -133,7 +137,7 @@ void connectMqtt()
             if (mqttConfig.boardStatusTopic != "")
                 mqttClient.publish(mqttConfig.boardStatusTopic.c_str(), (uint8_t *)mqttConfig.name.c_str(), mqttConfig.name.length(), true);
 
-            Serial.println(mqttClient.subscribe(mqttConfig.relayTopic.c_str()));
+            mqttClient.subscribe(mqttConfig.relayTopic.c_str());
         }
     }
 }
@@ -151,16 +155,38 @@ void setup()
     }
     else
     {
-        pinMode(1, INPUT_PULLUP);
-        pinMode(3, INPUT_PULLUP);
+        if (mqttConfig.pin1Topic != "")
+        {
+            pinMode(1, INPUT_PULLUP);
+            pin1Enabled = true;
+            pin1.interval(200);
+            pin1.attach(1);
+        }
+
+        if (mqttConfig.pin3Topic != "")
+        {
+            pinMode(3, INPUT_PULLUP);
+            pin3Enabled = true;
+            pin3.interval(200);
+            pin3.attach(3);
+        }
     }
 
     if (mqttEnabled)
         configureMqtt();
 
-    pinMode(14, INPUT_PULLUP);
+    if (mqttConfig.pin14Topic != "")
+    {
+        pinMode(14, INPUT_PULLUP);
+        pin14.interval(200);
+        pin14.attach(14);
+        pin14Enabled = true;
+    }
+
     pinMode(RELAY_PIN, OUTPUT);
     pinMode(STATUS_LED_PIN, OUTPUT);
+
+    digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN)));
 
     connectWifi();
 
@@ -195,6 +221,15 @@ void loop()
 
     if (mqttConnectedTimer.ready())
         connectMqtt();
+
+    if (pin1Enabled && pin1.update())
+        mqttClient.publish(mqttConfig.pin1Topic.c_str(), (const uint8_t *)"-1", 2, true);
+
+    if (pin3Enabled && pin3.update())
+        mqttClient.publish(mqttConfig.pin3Topic.c_str(), (const uint8_t *)"-1", 2, true);
+
+    if (pin14Enabled && pin14.update())
+        mqttClient.publish(mqttConfig.pin14Topic.c_str(), (const uint8_t *)"-1", 2, true);
 
     mqttClient.loop();
     server.handleClient();
