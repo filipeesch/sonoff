@@ -56,21 +56,40 @@ void WebConfiguration::homePage()
 {
     server.on("/", [this]() {
 
-        String body;
-        body.reserve(2000);
+        auto html = new HtmlTag();
+        auto head = new HtmlHeadElement();
+        auto body = new HtmlBodyElement();
 
-        masterPage(body);
+        html->append(head)->append(body);
 
-        body.concat("<br/>");
-        body.concat("<div>");
-        body.concat("<ul>");
-        body.concat("<li><a href='/wifi'>Configure Wifi</a></li>");
-        body.concat("<li><a href='/mqtt'>Configure MQTT</a></li>");
-        body.concat("<li><a href='/reboot' onclick=\"return confirm('Realy want to Reboot?')\">Reboot</a></li>");
-        body.concat("</ul>");
-        body.concat("</div>");
+        //masterPage(head, body);
 
-        server.send(200, "text/html", body);
+        head->append(new HtmlRaw("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />"));
+        head->append(new HtmlRaw("<style>ul{list-style-type: none;}</style>"));
+
+        body->append((new HtmlLinkElement("/"))->append(new HtmlText("Home")));
+
+        if (WiFi.status() == WL_CONNECTED)
+            body->append((new HtmlDivElement())->append(new HtmlText("Connected Wi-Fi: " + WiFi.SSID())));
+
+        /////////////////////////////
+
+        body->append(new HtmlBrElement());
+
+        auto ul = new HtmlUlElement();
+
+        auto confirmReboot = new HtmlAttribute("onclick", "return confirm('Realy want to Reboot?')");
+
+        ul
+            ->append((new HtmlLiElement())->append(new HtmlLinkElement("/wifi", "Configure Wi-Fi")))
+            ->append((new HtmlLiElement())->append(new HtmlLinkElement("/mqtt", "Configure MQTT")))
+            ->append((new HtmlLiElement())->append((new HtmlLinkElement("/reboot", "Reboot"))->appendAttr(confirmReboot)));
+
+        body->append((new HtmlDivElement())->append(ul));
+
+        server.send(200, "text/html", html->buildAll());
+
+        delete html;
     });
 }
 

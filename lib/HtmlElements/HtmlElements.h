@@ -2,6 +2,8 @@
 #define HTML_ELEMENTS_H
 
 #include "HtmlGenericElement.h"
+#include "HtmlText.h"
+#include "HtmlRaw.h"
 
 class HtmlTag : public HtmlGenericElement
 {
@@ -19,6 +21,12 @@ class HtmlBodyElement : public HtmlGenericElement
 {
   public:
     inline HtmlBodyElement() : HtmlGenericElement("body", false) {}
+};
+
+class HtmlBrElement : public HtmlGenericElement
+{
+  public:
+    inline HtmlBrElement() : HtmlGenericElement("br", true) {}
 };
 
 class HtmlDivElement : public HtmlGenericElement
@@ -69,9 +77,12 @@ class HtmlLinkElement : public HtmlGenericElement
   public:
     inline HtmlLinkElement() : HtmlGenericElement("a", false) {}
 
-    inline HtmlLinkElement(String href) : HtmlGenericElement("a", false)
+    inline HtmlLinkElement(String href, String text = "") : HtmlGenericElement("a", false)
     {
         this->href(href);
+
+        if (text != "")
+            append(new HtmlText(text));
     }
 
     inline const HtmlLinkElement &href(String v)

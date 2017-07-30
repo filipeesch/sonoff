@@ -1,5 +1,5 @@
-#ifndef HTML_CONTENT_H
-#define HTML_CONTENT_H
+#ifndef HTML_TEXT_H
+#define HTML_TEXT_H
 
 #include <WString.h>
 

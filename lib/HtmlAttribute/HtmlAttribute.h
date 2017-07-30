@@ -3,7 +3,9 @@
 
 #include <WString.h>
 
-class HtmlAttribute
+#include "HtmlContent.h"
+
+class HtmlAttribute : public HtmlContent
 {
     String _name;
     String _value;

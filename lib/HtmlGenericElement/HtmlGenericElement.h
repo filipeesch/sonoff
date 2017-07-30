@@ -11,24 +11,24 @@ using namespace std;
 
 class HtmlGenericElement : public HtmlContent
 {
-  private:
-    const String _tagName;
-    forward_list<HtmlAttribute *> _attrs;
-    forward_list<HtmlContent *> _children;
-    bool _selfClosing;
+private:
+  const String _tagName;
+  forward_list<HtmlAttribute *> _attrs;
+  forward_list<HtmlContent *> _children;
+  bool _selfClosing;
 
-  public:
-    HtmlGenericElement(const String tagName, bool selfClosing);
-    ~HtmlGenericElement();
+public:
+  HtmlGenericElement(const String tagName, bool selfClosing);
+  ~HtmlGenericElement();
 
-    const HtmlGenericElement &id(String);
-    const HtmlGenericElement &name(String);
+  int contentSize();
+  void build(String &);
 
-    const HtmlGenericElement &appendAttr(HtmlAttribute *);
-    const HtmlGenericElement &append(HtmlContent *);
+  HtmlGenericElement *id(String);
+  HtmlGenericElement *name(String);
 
-    int contentSize();
-    void build(String &);
+  HtmlGenericElement *appendAttr(HtmlAttribute *);
+  HtmlGenericElement *append(HtmlContent *);
 };
 
 #endif

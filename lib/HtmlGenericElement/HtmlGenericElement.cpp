@@ -15,28 +15,28 @@ HtmlGenericElement::~HtmlGenericElement()
         delete *it;
 }
 
-const HtmlGenericElement &HtmlGenericElement::id(String value)
+HtmlGenericElement *HtmlGenericElement::id(String value)
 {
     appendAttr(new HtmlAttribute("id", value));
-    return *this;
+    return this;
 }
 
-const HtmlGenericElement &HtmlGenericElement::name(String value)
+HtmlGenericElement *HtmlGenericElement::name(String value)
 {
     appendAttr(new HtmlAttribute("name", value));
-    return *this;
+    return this;
 }
 
-const HtmlGenericElement &HtmlGenericElement::appendAttr(HtmlAttribute *attr)
+HtmlGenericElement *HtmlGenericElement::appendAttr(HtmlAttribute *attr)
 {
     _attrs.push_front(attr);
-    return *this;
+    return this;
 }
 
-const HtmlGenericElement &HtmlGenericElement::append(HtmlContent *element)
+HtmlGenericElement *HtmlGenericElement::append(HtmlContent *element)
 {
     _children.push_front(element);
-    return *this;
+    return this;
 }
 
 int HtmlGenericElement::contentSize()
