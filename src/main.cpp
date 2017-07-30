@@ -14,6 +14,7 @@
 #include "Timer.h"
 
 #define RELAY_PIN 12
+#define STATUS_LED_PIN 13
 
 ESP8266WebServer server(80);
 ConfigurationManager configManager;
@@ -98,6 +99,8 @@ void mqtt_callback(const char *topic, byte *payload, unsigned int length)
         else
             digitalWrite(RELAY_PIN, !digitalRead(RELAY_PIN));
 
+        digitalWrite(STATUS_LED_PIN, digitalRead(RELAY_PIN));
+
         if (mqttConfig.relayStatusTopic != "")
         {
             auto status = String(digitalRead(RELAY_PIN));
@@ -148,15 +151,16 @@ void setup()
     }
     else
     {
-        pinMode(1, INPUT);
-        pinMode(3, INPUT);
-        pinMode(14, INPUT);
+        pinMode(1, INPUT_PULLUP);
+        pinMode(3, INPUT_PULLUP);
     }
 
     if (mqttEnabled)
         configureMqtt();
 
+    pinMode(14, INPUT_PULLUP);
     pinMode(RELAY_PIN, OUTPUT);
+    pinMode(STATUS_LED_PIN, OUTPUT);
 
     connectWifi();
 

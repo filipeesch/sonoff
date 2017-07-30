@@ -15,6 +15,7 @@ WebConfiguration::WebConfiguration(
 void WebConfiguration::configure()
 {
     homePage();
+    statusPage();
     wifiPage();
     saveWifiPage();
     mqttPage();
@@ -53,6 +54,7 @@ void WebConfiguration::homePage()
 
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
             body->ul([](HtmlBuilder *ul) {
+                ul->li()->a("/status", "Status");
                 ul->li()->a("/wifi", "Configure Wi-Fi");
                 ul->li()->a("/mqtt", "Configure MQTT");
                 ul->li()->a("/reboot", [](HtmlBuilder *a) {
@@ -269,5 +271,24 @@ void WebConfiguration::factoryResetPage()
 
         configManager.clearConfig();
         ESP.restart();
+    });
+}
+
+void WebConfiguration::statusPage()
+{
+    server.on("/status", [this]() {
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Relay Pin: " + String(digitalRead(12)));
+            body->div()->text("LED Pin: " + String(digitalRead(13)));
+            body->div()->text("Pin 1: " + String(digitalRead(1)));
+            body->div()->text("Pin 3: " + String(digitalRead(3)));
+            body->div()->text("Pin 14: " + String(digitalRead(14)));
+        });
+
+        server.send(200, "text/html", html.build());
     });
 }

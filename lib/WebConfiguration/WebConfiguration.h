@@ -13,6 +13,7 @@ class WebConfiguration
     ConfigurationManager &configManager;
 
     void createMasterPage(HtmlBuilder &, RenderPageHandler);
+    void statusPage();
     void homePage();
     void wifiPage();
     void saveWifiPage();
