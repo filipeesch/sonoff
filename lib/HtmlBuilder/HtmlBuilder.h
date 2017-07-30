@@ -2,12 +2,15 @@
 #define HTML_BUILDER_H
 
 #include <forward_list>
+#include <functional>
 
 #include "HtmlElements.h"
 
 class HtmlBuilder;
 
-typedef void (*HtmlBuilderHandler)(HtmlBuilder *builder);
+//typedef void (*HtmlBuilderHandler)(HtmlBuilder *builder);
+
+typedef std::function<void(HtmlBuilder *builder)> HtmlBuilderHandler;
 
 class HtmlBuilder
 {
@@ -44,10 +47,7 @@ class HtmlBuilder
     virtual ~HtmlBuilder()
     {
         for (auto builder : buildersToDealloc)
-        {
             delete builder;
-            Serial.println("Matando");
-        }
     }
 
     const String &build()
@@ -128,6 +128,35 @@ class HtmlBuilder
         auto elem = new HtmlLinkElement();
         elem->href(href);
         return CommonElement(elem, h);
+    }
+
+    HtmlBuilder *label(HtmlBuilderHandler h = nullptr)
+    {
+        return CommonElement(new HtmlLabelElement(), h);
+    }
+
+    HtmlBuilder *label(String text)
+    {
+        auto elem = new HtmlLabelElement();
+        elem->append(new HtmlText(text));
+        return CommonElement(elem);
+    }
+
+    HtmlBuilder *form(String action, String method, HtmlBuilderHandler h = nullptr)
+    {
+        auto elem = new HtmlFormElement();
+        elem->appendAttr(new HtmlAttribute("action", action));
+        elem->appendAttr(new HtmlAttribute("method", method));
+        return CommonElement(elem, h);
+    }
+
+    HtmlBuilder *input(String type, String name, String value = "")
+    {
+        auto elem = new HtmlInputElement();
+        elem->appendAttr(new HtmlAttribute("type", type));
+        elem->appendAttr(new HtmlAttribute("name", name));
+        elem->appendAttr(new HtmlAttribute("value", value));
+        return CommonElement(elem);
     }
 };
 

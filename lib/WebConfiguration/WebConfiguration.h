@@ -4,13 +4,15 @@
 #include "HtmlBuilder.h"
 #include "ConfigurationManager.h"
 
+typedef void (*RenderPageHandler)(HtmlBuilder *, HtmlBuilder *);
+
 class WebConfiguration
 {
   private:
     ESP8266WebServer &server;
     ConfigurationManager &configManager;
 
-    void masterPage(String &);
+    void createMasterPage(HtmlBuilder &, RenderPageHandler);
     void homePage();
     void wifiPage();
     void saveWifiPage();

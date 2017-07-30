@@ -54,6 +54,12 @@ class HtmlLiElement : public HtmlGenericElement
     ~HtmlLiElement() {}
 };
 
+class HtmlLabelElement : public HtmlGenericElement
+{
+  public:
+    HtmlLabelElement() : HtmlGenericElement("label", false) {}
+};
+
 class HtmlInputElement : public HtmlGenericElement
 {
   public:
@@ -99,6 +105,12 @@ class HtmlLinkElement : public HtmlGenericElement
         appendAttr(new HtmlAttribute("href", v));
         return *this;
     }
+};
+
+class HtmlFormElement : public HtmlGenericElement
+{
+  public:
+    HtmlFormElement() : HtmlGenericElement("form", false) {}
 };
 
 #endif

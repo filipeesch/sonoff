@@ -21,92 +21,35 @@ void WebConfiguration::configure()
     rebootPage();
 }
 
-void WebConfiguration::masterPage(String &body)
+void WebConfiguration::createMasterPage(HtmlBuilder &html, RenderPageHandler renderPage)
 {
-    body.concat("<head>");
+    auto head = html.head([](HtmlBuilder *head) {
+        head->raw("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>");
+        head->raw("<style>ul{list-style-type:none;padding:0;margin:0;}</style>");
+    });
 
-    body.concat("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />");
+    auto body = html.body([](HtmlBuilder *body) {
+        body->a("/", "Home");
 
-    body.concat("<style>");
-    body.concat("ul{list-style-type: none;}");
-    body.concat("</style>");
+        body->div()->text("Free Memory: " + String(ESP.getFreeHeap(), 10));
 
-    body.concat("</head>");
+        if (WiFi.status() == WL_CONNECTED)
+            body->div()->text("Connected Wi-Fi: " + WiFi.SSID());
 
-    body.concat("<a href='/'>Home</a>");
+        body->br();
+    });
 
-    HtmlDivElement div;
-    div.name("testeName");
-    div.id("testeId");
-
-    div.append(new HtmlInputElement("text", "testeName", String(ESP.getFreeHeap(), 10)));
-    div.append(new HtmlInputElement("text", "testeName2", "testeValue"));
-
-    div.build(body);
-
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        body.concat("<div>Conneted Wifi: ");
-        body.concat(WiFi.SSID());
-        body.concat("</div>");
-    }
+    renderPage(head, body);
 }
 
 void WebConfiguration::homePage()
 {
     server.on("/", [this]() {
 
-        // auto html = new HtmlTag();
-        // auto head = new HtmlHeadElement();
-        // auto body = new HtmlBodyElement();
-
-        // html->append(head)->append(body);
-
-        // //masterPage(head, body);
-
-        // head->append(new HtmlRaw("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />"));
-        // head->append(new HtmlRaw("<style>ul{list-style-type: none;}</style>"));
-
-        // body->append((new HtmlLinkElement("/"))->append(new HtmlText("Home")));
-
-        // if (WiFi.status() == WL_CONNECTED)
-        //     body->append((new HtmlDivElement())->append(new HtmlText("Connected Wi-Fi: " + WiFi.SSID())));
-
-        // /////////////////////////////
-
-        // body->append(new HtmlBrElement());
-
-        // auto ul = new HtmlUlElement();
-
-        // auto confirmReboot = new HtmlAttribute("onclick", "return confirm('Realy want to Reboot?')");
-
-        // ul
-        //     ->append((new HtmlLiElement())->append(new HtmlLinkElement("/wifi", "Configure Wi-Fi")))
-        //     ->append((new HtmlLiElement())->append(new HtmlLinkElement("/mqtt", "Configure MQTT")))
-        //     ->append((new HtmlLiElement())->append((new HtmlLinkElement("/reboot", "Reboot"))->appendAttr(confirmReboot)));
-
-        // body->append((new HtmlDivElement())->append(ul));
-
-        // server.send(200, "text/html", html->buildAll());
-
-        // delete html;
-
         HtmlTag htmlTag;
         HtmlBuilder html(&htmlTag);
 
-        html.head([](HtmlBuilder *head) {
-            head->raw("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>");
-            head->raw("<style>ul{list-style-type:none;padding:0;}</style>");
-        });
-
-        html.body([](HtmlBuilder *body) {
-            body->a("/", "Home");
-
-            body->div()->text("Free Memory: " + String(ESP.getFreeHeap(), 10));
-
-            if (WiFi.status() == WL_CONNECTED)
-                body->div()->text("Connected Wi-Fi: " + WiFi.SSID());
-
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
             body->ul([](HtmlBuilder *ul) {
                 ul->li()->a("/wifi", "Configure Wi-Fi");
                 ul->li()->a("/mqtt", "Configure MQTT");
@@ -125,48 +68,54 @@ void WebConfiguration::wifiPage()
 {
     server.on("/wifi", [this]() {
 
-        String body;
-        body.reserve(3500);
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
 
-        masterPage(body);
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
 
-        int n = WiFi.scanNetworks();
+            head->raw("<script>function ssid(evt,id){evt.preventDefault();document.getElementsByName('ssid')[0].value = id}</script>");
 
-        body.concat("<script>function ssid(evt,id){evt.preventDefault();document.getElementsByName('ssid')[0].value = id}</script>");
+            body->div([](HtmlBuilder *div) {
+                div->label("Select Wi-Fi:");
 
-        body.concat("<br/><div><label>Select Wifi:</label><ul>");
+                div->ul([](HtmlBuilder *ul) {
 
-        for (int i = 0; i < n; ++i)
-        {
-            int signal = WiFi.RSSI(i);
+                    int n = WiFi.scanNetworks();
 
-            if (signal <= -100)
-                signal = 0;
-            else if (signal >= -50)
-                signal = 100;
-            else
-                signal = 2 * (signal + 100);
+                    for (int i = 0; i < n; ++i)
+                    {
+                        int signal = WiFi.RSSI(i);
 
-            auto ssid = WiFi.SSID(i);
+                        if (signal <= -100)
+                            signal = 0;
+                        else if (signal >= -50)
+                            signal = 100;
+                        else
+                            signal = 2 * (signal + 100);
 
-            body.concat("<li><a href='#' onclick='ssid(event,\"");
-            body.concat(ssid);
-            body.concat("\")'>");
-            body.concat(ssid);
-            body.concat(" - ");
-            body.concat(signal);
-            body.concat("%</a></li>");
-        }
+                        auto ssid = WiFi.SSID(i);
 
-        body.concat("</ul></div>");
+                        auto networkDescription = ssid + " - (" + String(signal, 10) + ")%";
 
-        body.concat("<form action='/wifi-save' method='POST'>");
-        body.concat("<div>SSID: <input type='text' name='ssid'/></div>");
-        body.concat("<div>Password: <input type='text' name='password'/></div>");
-        body.concat("<input type='submit' value='Save'/>");
-        body.concat("</form>");
+                        ul->li()->a("#", networkDescription)->attr("onclick", "ssid(event,'" + ssid + "')");
+                    }
+                });
 
-        server.send(200, "text/html", body);
+                div->form("/wifi-save", "POST", [](HtmlBuilder *form) {
+                    auto div = form->div();
+                    div->text("SSID: ");
+                    div->input("text", "ssid");
+
+                    div = form->div();
+                    div->text("Password: ");
+                    div->input("text", "password");
+
+                    form->div()->input("submit", "submit", "Save");
+                });
+            });
+        });
+
+        server.send(200, "text/html", html.build());
     });
 }
 
@@ -181,17 +130,14 @@ void WebConfiguration::saveWifiPage()
 
         configManager.setWiFi(config);
 
-        String body;
-        body.reserve(1000);
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
 
-        masterPage(body);
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Wifi settings saved.");
+        });
 
-        body.concat("<div>Wifi settings saved.</div>");
-        body.concat("<div>SSID: ");
-        body.concat(config.ssid);
-        body.concat("</div>");
-
-        server.send(200, "text/html", body);
+        server.send(200, "text/html", html.build());
     });
 }
 
@@ -203,14 +149,14 @@ void WebConfiguration::rebootPage()
 {
     server.on("/reboot", [this]() {
 
-        String body;
-        body.reserve(1000);
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
 
-        masterPage(body);
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Rebooting...");
+        });
 
-        body.concat("<div>Rebooting...</div>");
-
-        server.send(200, "text/html", body);
+        server.send(200, "text/html", html.build());
 
         ESP.restart();
     });
