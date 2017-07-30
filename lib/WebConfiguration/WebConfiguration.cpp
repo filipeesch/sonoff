@@ -160,32 +160,42 @@ void WebConfiguration::mqttPage()
 
             body->form("/mqtt-save", "POST", [](HtmlBuilder *form) {
 
+                MqttConfiguration config;
+                ConfigurationManager configManager;
+                configManager.getMqtt(config);
+
                 form->div()->label("Board Name:");
-                form->div()->input("text", "name")->attr("required");
+                form->div()->input("text", "name", config.name)->attr("required");
 
                 form->div()->label("MQTT Host:");
-                form->div()->input("text", "host")->attr("required");
+                form->div()->input("text", "host", config.host)->attr("required");
 
                 form->div()->label("MQTT Port:");
-                form->div()->input("number", "port", "1883")->attr("required");
+                form->div()->input("number", "port", config.port > 0 ? String(config.port) : String("1883"))->attr("required");
 
                 form->div()->label("MQTT User:");
-                form->div()->input("text", "user");
+                form->div()->input("text", "user", config.user);
 
                 form->div()->label("MQTT Password:");
-                form->div()->input("password", "password");
+                form->div()->input("password", "password", config.password);
 
                 form->div()->label("Relay Topic:");
-                form->div()->input("text", "relayTopic")->attr("required");
+                form->div()->input("text", "relayTopic", config.relayTopic)->attr("required");
+
+                form->div()->label("Relay Status Topic:");
+                form->div()->input("text", "relayStatusTopic", config.relayStatusTopic);
+
+                form->div()->label("Board Status Topic:");
+                form->div()->input("text", "boardStatusTopic", config.boardStatusTopic);
 
                 form->div()->label("Pin 1 Topic:");
-                form->div()->input("text", "pin1Topic");
+                form->div()->input("text", "pin1Topic", config.pin1Topic);
 
                 form->div()->label("Pin 3 Topic:");
-                form->div()->input("text", "pin3Topic");
+                form->div()->input("text", "pin3Topic", config.pin3Topic);
 
                 form->div()->label("Pin 14 Topic:");
-                form->div()->input("text", "pin14Topic");
+                form->div()->input("text", "pin14Topic", config.pin14Topic);
 
                 form->br();
                 form->div()->input("submit", "submit", "Save");
@@ -198,7 +208,7 @@ void WebConfiguration::mqttPage()
 
 void WebConfiguration::saveMqttPage()
 {
-    server.on("/wifi-save", [this]() {
+    server.on("/mqtt-save", [this]() {
 
         MqttConfiguration config;
 
@@ -208,6 +218,8 @@ void WebConfiguration::saveMqttPage()
         config.user = server.arg("user");
         config.password = server.arg("password");
         config.relayTopic = server.arg("relayTopic");
+        config.relayStatusTopic = server.arg("relayStatusTopic");
+        config.boardStatusTopic = server.arg("boardStatusTopic");
         config.pin1Topic = server.arg("pin1Topic");
         config.pin3Topic = server.arg("pin3Topic");
         config.pin14Topic = server.arg("pin14Topic");

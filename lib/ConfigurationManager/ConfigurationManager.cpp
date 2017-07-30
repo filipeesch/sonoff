@@ -5,10 +5,8 @@
 
 void ConfigurationManager::clearConfig()
 {
-    Serial.println("Removind files");
-    Serial.println(SPIFFS.remove(mqttConfigFile));
-    Serial.println(SPIFFS.remove(wifiConfigFile));
-    //spi_flash_erase_sector(0x7E); //clear stored wifi settings
+    SPIFFS.remove(mqttConfigFile);
+    SPIFFS.remove(wifiConfigFile);
 }
 
 void ConfigurationManager::setWiFi(WiFiConfiguration &config)
@@ -54,6 +52,10 @@ void ConfigurationManager::setMqtt(MqttConfiguration &config)
     file.print("\n");
     file.print(config.relayTopic);
     file.print("\n");
+    file.print(config.relayStatusTopic);
+    file.print("\n");
+    file.print(config.boardStatusTopic);
+    file.print("\n");
     file.print(config.pin1Topic);
     file.print("\n");
     file.print(config.pin3Topic);
@@ -77,6 +79,8 @@ bool ConfigurationManager::getMqtt(MqttConfiguration &config)
     config.user = f.readStringUntil('\n');
     config.password = f.readStringUntil('\n');
     config.relayTopic = f.readStringUntil('\n');
+    config.relayStatusTopic = f.readStringUntil('\n');
+    config.boardStatusTopic = f.readStringUntil('\n');
     config.pin1Topic = f.readStringUntil('\n');
     config.pin3Topic = f.readStringUntil('\n');
     config.pin14Topic = f.readStringUntil('\n');

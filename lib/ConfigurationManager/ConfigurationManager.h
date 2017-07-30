@@ -9,6 +9,8 @@ struct MqttConfiguration
     String user;
     String password;
     String relayTopic;
+    String relayStatusTopic;
+    String boardStatusTopic;
     String pin1Topic;
     String pin3Topic;
     String pin14Topic;
