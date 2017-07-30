@@ -8,10 +8,10 @@ HtmlGenericElement::HtmlGenericElement(
 
 HtmlGenericElement::~HtmlGenericElement()
 {
-    for (forward_list<HtmlAttribute *>::const_iterator it = _attrs.begin(); it != _attrs.end(); ++it)
+    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
         delete *it;
 
-    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (auto it = _children.begin(); it != _children.end(); ++it)
         delete *it;
 }
 
@@ -29,13 +29,13 @@ HtmlGenericElement *HtmlGenericElement::name(String value)
 
 HtmlGenericElement *HtmlGenericElement::appendAttr(HtmlAttribute *attr)
 {
-    _attrs.push_front(attr);
+    _attrs.push_back(attr);
     return this;
 }
 
 HtmlGenericElement *HtmlGenericElement::append(HtmlContent *element)
 {
-    _children.push_front(element);
+    _children.push_back(element);
     return this;
 }
 
@@ -43,13 +43,13 @@ int HtmlGenericElement::contentSize()
 {
     int size = _tagName.length() + 1;
 
-    for (forward_list<HtmlAttribute *>::const_iterator it = _attrs.begin(); it != _attrs.end(); ++it)
+    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
         size += (*it)->contentSize() + 1;
 
     if (_selfClosing)
         return size + 2;
 
-    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (auto it = _children.begin(); it != _children.end(); ++it)
         size += (*it)->contentSize();
 
     return size + _tagName.length() + 4;
@@ -60,7 +60,7 @@ void HtmlGenericElement::build(String &html)
     html.concat("<");
     html.concat(_tagName);
 
-    for (forward_list<HtmlAttribute *>::const_iterator it = _attrs.begin(); it != _attrs.end(); ++it)
+    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
     {
         html.concat(" ");
         (*it)->build(html);
@@ -74,7 +74,7 @@ void HtmlGenericElement::build(String &html)
 
     html.concat(">");
 
-    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (auto it = _children.begin(); it != _children.end(); ++it)
         (*it)->build(html);
 
     html.concat("</");

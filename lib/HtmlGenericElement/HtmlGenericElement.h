@@ -1,7 +1,7 @@
 #ifndef HTML_GENERIC_ELEMENT_H
 #define HTML_GENERIC_ELEMENT_H
 
-#include <forward_list>
+#include <list>
 #include <WString.h>
 
 #include "HtmlContent.h"
@@ -13,8 +13,8 @@ class HtmlGenericElement : public HtmlContent
 {
 private:
   const String _tagName;
-  forward_list<HtmlAttribute *> _attrs;
-  forward_list<HtmlContent *> _children;
+  list<HtmlAttribute *> _attrs;
+  list<HtmlContent *> _children;
   bool _selfClosing;
 
 public:
