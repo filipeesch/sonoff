@@ -8,8 +8,6 @@
 
 class HtmlBuilder;
 
-//typedef void (*HtmlBuilderHandler)(HtmlBuilder *builder);
-
 typedef std::function<void(HtmlBuilder *builder)> HtmlBuilderHandler;
 
 class HtmlBuilder
@@ -56,11 +54,6 @@ class HtmlBuilder
 
         _html.reserve(size);
         _elem->build(_html);
-
-        Serial.print("Html Reserved size: ");
-        Serial.println(size);
-        Serial.print("Html Real size: ");
-        Serial.println(_html.length());
 
         return _html;
     }

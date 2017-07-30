@@ -18,13 +18,15 @@ void WebConfiguration::configure()
     wifiPage();
     saveWifiPage();
     mqttPage();
+    saveMqttPage();
     rebootPage();
+    factoryResetPage();
 }
 
 void WebConfiguration::createMasterPage(HtmlBuilder &html, RenderPageHandler renderPage)
 {
     auto head = html.head([](HtmlBuilder *head) {
-        head->raw("<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'/>");
+        head->raw("<meta name='viewport' content='width=device-width, initial-scale=1.3, maximum-scale=1.3, user-scalable=no'/>");
         head->raw("<style>ul{list-style-type:none;padding:0;margin:0;}</style>");
     });
 
@@ -57,6 +59,10 @@ void WebConfiguration::homePage()
                     a->text("Reboot");
                     a->attr("onclick", "return confirm('Really want to Reboot?')");
                 });
+                ul->li()->a("/factory-reset", [](HtmlBuilder *a) {
+                    a->text("Factory Reset");
+                    a->attr("onclick", "return confirm('Really want to Factory Reset?')");
+                });
             });
         });
 
@@ -73,7 +79,7 @@ void WebConfiguration::wifiPage()
 
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
 
-            head->raw("<script>function ssid(evt,id){evt.preventDefault();document.getElementsByName('ssid')[0].value = id}</script>");
+            head->raw("<script>function ssid(id){document.getElementsByName('ssid')[0].value = id}</script>");
 
             body->div([](HtmlBuilder *div) {
                 div->label("Select Wi-Fi:");
@@ -97,19 +103,21 @@ void WebConfiguration::wifiPage()
 
                         auto networkDescription = ssid + " - (" + String(signal, 10) + ")%";
 
-                        ul->li()->a("#", networkDescription)->attr("onclick", "ssid(event,'" + ssid + "')");
+                        ul->li()->a("#pwd", networkDescription)->attr("onclick", "ssid('" + ssid + "')");
                     }
                 });
 
+                div->br();
+
                 div->form("/wifi-save", "POST", [](HtmlBuilder *form) {
-                    auto div = form->div();
-                    div->text("SSID: ");
-                    div->input("text", "ssid");
 
-                    div = form->div();
-                    div->text("Password: ");
-                    div->input("text", "password");
+                    form->div()->label("SSID:");
+                    form->div()->input("text", "ssid");
 
+                    form->div()->label("Password:");
+                    form->div()->input("password", "password")->attr("id", "pwd");
+
+                    form->br();
                     form->div()->input("submit", "submit", "Save");
                 });
             });
@@ -134,7 +142,7 @@ void WebConfiguration::saveWifiPage()
         HtmlBuilder html(&htmlTag);
 
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
-            body->div()->text("Wifi settings saved.");
+            body->div()->text("Wi-Fi settings saved.");
         });
 
         server.send(200, "text/html", html.build());
@@ -143,6 +151,78 @@ void WebConfiguration::saveWifiPage()
 
 void WebConfiguration::mqttPage()
 {
+    server.on("/mqtt", [this]() {
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+
+            body->form("/mqtt-save", "POST", [](HtmlBuilder *form) {
+
+                form->div()->label("Board Name:");
+                form->div()->input("text", "name")->attr("required");
+
+                form->div()->label("MQTT Host:");
+                form->div()->input("text", "host")->attr("required");
+
+                form->div()->label("MQTT Port:");
+                form->div()->input("number", "port", "1883")->attr("required");
+
+                form->div()->label("MQTT User:");
+                form->div()->input("text", "user");
+
+                form->div()->label("MQTT Password:");
+                form->div()->input("password", "password");
+
+                form->div()->label("Relay Topic:");
+                form->div()->input("text", "relayTopic")->attr("required");
+
+                form->div()->label("Pin 1 Topic:");
+                form->div()->input("text", "pin1Topic");
+
+                form->div()->label("Pin 3 Topic:");
+                form->div()->input("text", "pin3Topic");
+
+                form->div()->label("Pin 14 Topic:");
+                form->div()->input("text", "pin14Topic");
+
+                form->br();
+                form->div()->input("submit", "submit", "Save");
+            });
+        });
+
+        server.send(200, "text/html", html.build());
+    });
+}
+
+void WebConfiguration::saveMqttPage()
+{
+    server.on("/wifi-save", [this]() {
+
+        MqttConfiguration config;
+
+        config.name = server.arg("name");
+        config.host = server.arg("host");
+        config.port = server.arg("port").toInt();
+        config.user = server.arg("user");
+        config.password = server.arg("password");
+        config.relayTopic = server.arg("relayTopic");
+        config.pin1Topic = server.arg("pin1Topic");
+        config.pin3Topic = server.arg("pin3Topic");
+        config.pin14Topic = server.arg("pin14Topic");
+
+        configManager.setMqtt(config);
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("MQTT settings saved.");
+        });
+
+        server.send(200, "text/html", html.build());
+    });
 }
 
 void WebConfiguration::rebootPage()
@@ -158,6 +238,24 @@ void WebConfiguration::rebootPage()
 
         server.send(200, "text/html", html.build());
 
+        ESP.restart();
+    });
+}
+
+void WebConfiguration::factoryResetPage()
+{
+    server.on("/factory-reset", [this]() {
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Resetting...");
+        });
+
+        server.send(200, "text/html", html.build());
+
+        configManager.clearConfig();
         ESP.restart();
     });
 }

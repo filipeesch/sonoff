@@ -8,14 +8,67 @@
 
 #include "ConfigurationManager.h"
 #include "WebConfiguration.h"
+#include "Timer.h"
 
 ESP8266WebServer server(80);
 ConfigurationManager configManager;
 
+WiFiConfiguration wifiConfig;
+MqttConfiguration mqttConfig;
+
 WebConfiguration webConfig(server, configManager);
 
-const char *ssid = "Esch";
-const char *pwd = "wireless";
+Timer wifiConnectedTimer(1000);
+Timer apModeTimer(5 * 60 * 1000);
+
+bool apModeOn = false;
+
+void enableAPMode()
+{
+    Serial.println("Starting AP mode");
+
+    IPAddress ip(192, 168, 1, 1);
+    IPAddress mask(255, 255, 255, 0);
+
+    WiFi.softAPConfig(ip, ip, mask);
+
+    auto ssid = "ESP_" + String(ESP.getChipId(), 10);
+    apModeOn = WiFi.softAP(ssid.c_str());
+}
+
+bool connectWifi()
+{
+    if (!configManager.getWiFi(wifiConfig))
+    {
+        enableAPMode();
+        return false;
+    }
+
+    WiFi.begin(wifiConfig.ssid.c_str(), wifiConfig.password.c_str());
+
+    Serial.print("\n\nConnecting to Wi-Fi: ");
+    Serial.print(wifiConfig.ssid);
+
+    int timeout = 0;
+
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(1000);
+        Serial.print(".");
+        if (timeout++ > 10)
+        {
+            Serial.println("Wi-Fi Timeout");
+            return false;
+        }
+    }
+
+    Serial.print("\nConnected to ");
+    Serial.println(wifiConfig.ssid);
+    Serial.print("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    return true;
+}
 
 void setup()
 {
@@ -24,62 +77,40 @@ void setup()
     if (!SPIFFS.begin())
         Serial.println("Error on mounting FS!");
 
-    WiFi.begin(ssid, pwd);
+    connectWifi();
 
-    Serial.print("Connecting to Wi-Fi");
-    while (WiFi.status() != WL_CONNECTED)
+    if (configManager.getMqtt(mqttConfig))
     {
-        delay(1000);
-        Serial.print(".");
     }
-
-    Serial.print("Connected to ");
-    Serial.println(ssid);
-    Serial.print("IP address: ");
-    Serial.println(WiFi.localIP());
-
-    // Set WiFi to station mode and disconnect from an AP if it was previously connected
-    // WiFi.mode(WIFI_STA);
-    // WiFi.disconnect();
-    // delay(100);
-
-    // Serial.println("Setup done");
 
     webConfig.configure();
 
     server.begin();
+
+    apModeTimer.reset();
 }
 
 void loop()
 {
+    if (wifiConnectedTimer.ready())
+    {
+        if (WiFi.status() == WL_CONNECTED)
+        {
+            apModeTimer.reset();
+
+            if (apModeOn)
+                apModeOn = !WiFi.softAPdisconnect(true);
+        }
+    }
+
+    if (apModeTimer.ready())
+    {
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            if (!apModeOn)
+                enableAPMode();
+        }
+    }
+
     server.handleClient();
-
-    // Serial.println("scan start");
-
-    // // WiFi.scanNetworks will return the number of networks found
-    // int n = WiFi.scanNetworks();
-    // Serial.println("scan done");
-    // if (n == 0)
-    //     Serial.println("no networks found");
-    // else
-    // {
-    //     Serial.print(n);
-    //     Serial.println(" networks found");
-    //     for (int i = 0; i < n; ++i)
-    //     {
-    //         // Print SSID and RSSI for each network found
-    //         Serial.print(i + 1);
-    //         Serial.print(": ");
-    //         Serial.print(WiFi.SSID(i));
-    //         Serial.print(" (");
-    //         Serial.print(WiFi.RSSI(i));
-    //         Serial.print(")");
-    //         Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE) ? " " : "*");
-    //         delay(10);
-    //     }
-    // }
-    // Serial.println("");
-
-    // // Wait a bit before scanning again
-    // delay(5000);
 }

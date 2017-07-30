@@ -17,7 +17,9 @@ class WebConfiguration
     void wifiPage();
     void saveWifiPage();
     void mqttPage();
+    void saveMqttPage();
     void rebootPage();
+    void factoryResetPage();
 
   public:
     void configure();
