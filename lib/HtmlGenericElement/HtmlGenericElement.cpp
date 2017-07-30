@@ -11,33 +11,32 @@ HtmlGenericElement::~HtmlGenericElement()
     for (forward_list<HtmlAttribute *>::const_iterator it = _attrs.begin(); it != _attrs.end(); ++it)
         delete *it;
 
-    for (forward_list<HtmlGenericElement *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
         delete *it;
 }
 
-void HtmlGenericElement::id(String value)
+const HtmlGenericElement &HtmlGenericElement::id(String value)
 {
     appendAttr(new HtmlAttribute("id", value));
+    return *this;
 }
 
-void HtmlGenericElement::name(String value)
+const HtmlGenericElement &HtmlGenericElement::name(String value)
 {
     appendAttr(new HtmlAttribute("name", value));
+    return *this;
 }
 
-void HtmlGenericElement::text(String value)
-{
-    _content = value;
-}
-
-void HtmlGenericElement::appendAttr(HtmlAttribute *attr)
+const HtmlGenericElement &HtmlGenericElement::appendAttr(HtmlAttribute *attr)
 {
     _attrs.push_front(attr);
+    return *this;
 }
 
-void HtmlGenericElement::append(HtmlGenericElement *element)
+const HtmlGenericElement &HtmlGenericElement::append(HtmlContent *element)
 {
     _children.push_front(element);
+    return *this;
 }
 
 int HtmlGenericElement::contentSize()
@@ -50,10 +49,10 @@ int HtmlGenericElement::contentSize()
     if (_selfClosing)
         return size + 2;
 
-    for (forward_list<HtmlGenericElement *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
         size += (*it)->contentSize();
 
-    return size + _tagName.length() + _content.length() + 4;
+    return size + _tagName.length() + 4;
 }
 
 void HtmlGenericElement::build(String &html)
@@ -75,9 +74,7 @@ void HtmlGenericElement::build(String &html)
 
     html.concat(">");
 
-    html.concat(_content);
-
-    for (forward_list<HtmlGenericElement *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
+    for (forward_list<HtmlContent *>::const_iterator it = _children.begin(); it != _children.end(); ++it)
         (*it)->build(html);
 
     html.concat("</");

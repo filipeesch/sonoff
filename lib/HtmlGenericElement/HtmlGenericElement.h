@@ -4,29 +4,28 @@
 #include <forward_list>
 #include <WString.h>
 
+#include "HtmlContent.h"
 #include "HtmlAttribute.h"
 
 using namespace std;
 
-class HtmlGenericElement
+class HtmlGenericElement : public HtmlContent
 {
   private:
     const String _tagName;
-    String _content;
     forward_list<HtmlAttribute *> _attrs;
-    forward_list<HtmlGenericElement *> _children;
+    forward_list<HtmlContent *> _children;
     bool _selfClosing;
 
   public:
     HtmlGenericElement(const String tagName, bool selfClosing);
     ~HtmlGenericElement();
 
-    void id(String);
-    void name(String);
-    void text(String);
+    const HtmlGenericElement &id(String);
+    const HtmlGenericElement &name(String);
 
-    void appendAttr(HtmlAttribute *);
-    void append(HtmlGenericElement *);
+    const HtmlGenericElement &appendAttr(HtmlAttribute *);
+    const HtmlGenericElement &append(HtmlContent *);
 
     int contentSize();
     void build(String &);
