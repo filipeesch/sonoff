@@ -8,11 +8,11 @@ HtmlGenericElement::HtmlGenericElement(
 
 HtmlGenericElement::~HtmlGenericElement()
 {
-    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
-        delete *it;
+    for (auto i : _attrs)
+        delete i;
 
-    for (auto it = _children.begin(); it != _children.end(); ++it)
-        delete *it;
+    for (auto i : _children)
+        delete i;
 }
 
 HtmlGenericElement *HtmlGenericElement::id(String value)
@@ -43,14 +43,14 @@ int HtmlGenericElement::contentSize()
 {
     int size = _tagName.length() + 1;
 
-    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
-        size += (*it)->contentSize() + 1;
+    for (auto attr : _attrs)
+        size += attr->contentSize() + 1;
 
     if (_selfClosing)
         return size + 2;
 
-    for (auto it = _children.begin(); it != _children.end(); ++it)
-        size += (*it)->contentSize();
+    for (auto child : _children)
+        size += child->contentSize();
 
     return size + _tagName.length() + 4;
 }
@@ -60,10 +60,10 @@ void HtmlGenericElement::build(String &html)
     html.concat("<");
     html.concat(_tagName);
 
-    for (auto it = _attrs.begin(); it != _attrs.end(); ++it)
+    for (auto attr : _attrs)
     {
         html.concat(" ");
-        (*it)->build(html);
+        attr->build(html);
     }
 
     if (_selfClosing)
@@ -74,8 +74,8 @@ void HtmlGenericElement::build(String &html)
 
     html.concat(">");
 
-    for (auto it = _children.begin(); it != _children.end(); ++it)
-        (*it)->build(html);
+    for (auto child : _children)
+        child->build(html);
 
     html.concat("</");
     html.concat(_tagName);

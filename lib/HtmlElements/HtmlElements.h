@@ -8,64 +8,72 @@
 class HtmlTag : public HtmlGenericElement
 {
   public:
-    inline HtmlTag() : HtmlGenericElement("html", false) {}
+    HtmlTag() : HtmlGenericElement("html", false) {}
+    ~HtmlTag() {}
 };
 
 class HtmlHeadElement : public HtmlGenericElement
 {
   public:
-    inline HtmlHeadElement() : HtmlGenericElement("head", false) {}
+    HtmlHeadElement() : HtmlGenericElement("head", false) {}
+    ~HtmlHeadElement() {}
 };
 
 class HtmlBodyElement : public HtmlGenericElement
 {
   public:
-    inline HtmlBodyElement() : HtmlGenericElement("body", false) {}
+    HtmlBodyElement() : HtmlGenericElement("body", false) {}
+    ~HtmlBodyElement() {}
 };
 
 class HtmlBrElement : public HtmlGenericElement
 {
   public:
-    inline HtmlBrElement() : HtmlGenericElement("br", true) {}
+    HtmlBrElement() : HtmlGenericElement("br", true) {}
+    ~HtmlBrElement() {}
 };
 
 class HtmlDivElement : public HtmlGenericElement
 {
   public:
-    inline HtmlDivElement() : HtmlGenericElement("div", false) {}
+    HtmlDivElement() : HtmlGenericElement("div", false) {}
+    ~HtmlDivElement() {}
 };
 
 class HtmlUlElement : public HtmlGenericElement
 {
   public:
-    inline HtmlUlElement() : HtmlGenericElement("ul", false) {}
+    HtmlUlElement() : HtmlGenericElement("ul", false) {}
+    ~HtmlUlElement() {}
 };
 
 class HtmlLiElement : public HtmlGenericElement
 {
   public:
-    inline HtmlLiElement() : HtmlGenericElement("li", false) {}
+    HtmlLiElement() : HtmlGenericElement("li", false) {}
+    ~HtmlLiElement() {}
 };
 
 class HtmlInputElement : public HtmlGenericElement
 {
   public:
-    inline HtmlInputElement() : HtmlGenericElement("input", true) {}
+    HtmlInputElement() : HtmlGenericElement("input", true) {}
+    ~HtmlInputElement() {}
 
-    inline HtmlInputElement(String type, String name, String value = "") : HtmlGenericElement("input", true)
+    HtmlInputElement(String type, String name, String value = "") : HtmlGenericElement("input", true)
     {
         this->type(type);
         this->value(value);
         this->name(name);
     }
 
-    inline const HtmlInputElement &type(String v)
+    const HtmlInputElement &type(String v)
     {
         appendAttr(new HtmlAttribute("type", v));
         return *this;
     }
 
-    inline const HtmlInputElement &value(String v)
+    const HtmlInputElement &value(String v)
     {
         appendAttr(new HtmlAttribute("value", v));
         return *this;
@@ -75,9 +83,10 @@ class HtmlInputElement : public HtmlGenericElement
 class HtmlLinkElement : public HtmlGenericElement
 {
   public:
-    inline HtmlLinkElement() : HtmlGenericElement("a", false) {}
+    HtmlLinkElement() : HtmlGenericElement("a", false) {}
+    ~HtmlLinkElement() {}
 
-    inline HtmlLinkElement(String href, String text = "") : HtmlGenericElement("a", false)
+    HtmlLinkElement(String href, String text = "") : HtmlGenericElement("a", false)
     {
         this->href(href);
 
@@ -85,7 +94,7 @@ class HtmlLinkElement : public HtmlGenericElement
             append(new HtmlText(text));
     }
 
-    inline const HtmlLinkElement &href(String v)
+    const HtmlLinkElement &href(String v)
     {
         appendAttr(new HtmlAttribute("href", v));
         return *this;

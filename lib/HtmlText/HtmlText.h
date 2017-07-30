@@ -13,12 +13,12 @@ class HtmlText : public HtmlContent
   public:
     HtmlText(String content) : _content(content) {}
 
-    inline int contentSize()
+    int contentSize()
     {
         return _content.length();
     }
 
-    inline void build(String &html)
+    void build(String &html)
     {
         html.concat(_content);
     }
