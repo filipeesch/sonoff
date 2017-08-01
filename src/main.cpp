@@ -30,6 +30,7 @@ WebConfiguration webConfig(server, configManager);
 
 Timer mqttConnectedTimer(5000);
 Timer wifiConnectedTimer(1000);
+Timer wifiReconnectedTimer(30 * 1000);
 Timer apModeTimer(5 * 60 * 1000);
 
 bool apModeOn = false, mqttEnabled = false;
@@ -39,6 +40,9 @@ bool pin1Enabled = false, pin3Enabled = false, pin14Enabled = false;
 
 void enableAPMode()
 {
+    if (apModeOn)
+        return;
+
     Serial.println("Starting AP mode");
 
     IPAddress ip(192, 168, 1, 1);
@@ -61,23 +65,18 @@ bool connectWifi()
     WiFi.begin(wifiConfig.ssid.c_str(), wifiConfig.password.c_str());
 
     Serial.print("\n\nConnecting to Wi-Fi: ");
-    Serial.print(wifiConfig.ssid);
+    Serial.println(wifiConfig.ssid);
 
-    int timeout = 0;
-
-    while (WiFi.status() != WL_CONNECTED)
+    if (WiFi.waitForConnectResult() != WL_CONNECTED)
     {
-        delay(1000);
-        Serial.print(".");
-        if (timeout++ > 10)
-        {
-            Serial.println("Wi-Fi Timeout");
-            return false;
-        }
+        Serial.println("Wi-Fi Timeout");
+        return false;
     }
 
-    Serial.print("\nConnected to ");
-    Serial.println(wifiConfig.ssid);
+    WiFi.softAPdisconnect(true);
+    apModeOn = false;
+
+    Serial.println("\nWi-Fi Connected!");
     Serial.print("IP address: ");
     Serial.println(WiFi.localIP());
 
@@ -103,7 +102,7 @@ void mqtt_callback(const char *topic, byte *payload, unsigned int length)
         else
             digitalWrite(RELAY_PIN, !digitalRead(RELAY_PIN));
 
-        digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN)));
+        digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN));
 
         if (mqttConfig.relayStatusTopic != "")
         {
@@ -186,9 +185,10 @@ void setup()
     pinMode(RELAY_PIN, OUTPUT);
     pinMode(STATUS_LED_PIN, OUTPUT);
 
-    digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN)));
+    digitalWrite(STATUS_LED_PIN, !digitalRead(RELAY_PIN));
 
-    connectWifi();
+    if (connectWifi())
+        connectMqtt();
 
     webConfig.configure();
 
@@ -199,38 +199,34 @@ void setup()
 
 void loop()
 {
-    if (wifiConnectedTimer.ready())
+    if (WiFi.status() == WL_CONNECTED)
     {
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            apModeTimer.reset();
+        if (mqttConnectedTimer.ready())
+            connectMqtt();
 
-            if (apModeOn)
-                apModeOn = !WiFi.softAPdisconnect(true);
+        if (pin1Enabled && pin1.update())
+            mqttClient.publish(mqttConfig.pin1Topic.c_str(), (const uint8_t *)"-1", 2, false);
+
+        if (pin3Enabled && pin3.update())
+            mqttClient.publish(mqttConfig.pin3Topic.c_str(), (const uint8_t *)"-1", 2, false);
+
+        if (pin14Enabled && pin14.update())
+            mqttClient.publish(mqttConfig.pin14Topic.c_str(), (const uint8_t *)"-1", 2, false);
+
+        mqttClient.loop();
+        apModeTimer.reset();
+    }
+    else
+    {
+        if (wifiReconnectedTimer.ready())
+        {
+            if (connectWifi())
+                connectMqtt();
         }
+
+        if (apModeTimer.ready())
+            enableAPMode();
     }
 
-    if (apModeTimer.ready())
-    {
-        if (WiFi.status() != WL_CONNECTED)
-        {
-            if (!apModeOn)
-                enableAPMode();
-        }
-    }
-
-    if (mqttConnectedTimer.ready())
-        connectMqtt();
-
-    if (pin1Enabled && pin1.update())
-        mqttClient.publish(mqttConfig.pin1Topic.c_str(), (const uint8_t *)"-1", 2, true);
-
-    if (pin3Enabled && pin3.update())
-        mqttClient.publish(mqttConfig.pin3Topic.c_str(), (const uint8_t *)"-1", 2, true);
-
-    if (pin14Enabled && pin14.update())
-        mqttClient.publish(mqttConfig.pin14Topic.c_str(), (const uint8_t *)"-1", 2, true);
-
-    mqttClient.loop();
     server.handleClient();
 }

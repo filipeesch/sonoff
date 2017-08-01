@@ -55,8 +55,8 @@ void WebConfiguration::homePage()
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
             body->ul([](HtmlBuilder *ul) {
                 ul->li()->a("/status", "Status");
-                ul->li()->a("/wifi", "Configure Wi-Fi");
-                ul->li()->a("/mqtt", "Configure MQTT");
+                ul->li()->a("/wifi", "Wi-Fi");
+                ul->li()->a("/mqtt", "MQTT");
                 ul->li()->a("/reboot", [](HtmlBuilder *a) {
                     a->text("Reboot");
                     a->attr("onclick", "return confirm('Really want to Reboot?')");
