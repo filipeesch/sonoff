@@ -5,8 +5,33 @@
 
 void ConfigurationManager::clearConfig()
 {
+    SPIFFS.remove(settingsConfigFile);
     SPIFFS.remove(mqttConfigFile);
     SPIFFS.remove(wifiConfigFile);
+}
+
+void ConfigurationManager::setSettings(SettingsConfiguration &config)
+{
+    auto file = SPIFFS.open(settingsConfigFile, "w+");
+
+    file.print(config.updateServerUrl);
+    file.print("\n");
+
+    file.close();
+}
+
+bool ConfigurationManager::getSettings(SettingsConfiguration &config)
+{
+    auto f = SPIFFS.open(settingsConfigFile, "r");
+
+    if (!f)
+        return false;
+
+    config.updateServerUrl = f.readStringUntil('\n');
+
+    f.close();
+
+    return true;
 }
 
 void ConfigurationManager::setWiFi(WiFiConfiguration &config)

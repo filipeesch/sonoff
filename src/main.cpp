@@ -6,7 +6,10 @@
 #include <FS.h>
 #include <string.h>
 #include <Bounce2.h>
-//#include <ESP8266mDNS.h>
+#include <ESP8266mDNS.h>
+#include <ArduinoOTA.h>
+#include <WiFiUdp.h>
+#include <ESP8266httpUpdate.h>
 
 #include <PubSubClient.h>
 
@@ -20,6 +23,7 @@
 ESP8266WebServer server(80);
 ConfigurationManager configManager;
 
+SettingsConfiguration settings;
 WiFiConfiguration wifiConfig;
 MqttConfiguration mqttConfig;
 
@@ -32,6 +36,7 @@ Timer mqttConnectedTimer(5000);
 Timer wifiConnectedTimer(1000);
 Timer wifiReconnectedTimer(30 * 1000);
 Timer apModeTimer(5 * 60 * 1000);
+Timer checkUpdates(1 * 60 * 1000);
 
 bool apModeOn = false, mqttEnabled = false;
 
@@ -143,9 +148,13 @@ void connectMqtt()
 
 void setup()
 {
+    ArduinoOTA.begin();
+
     SPIFFS.begin();
 
     mqttEnabled = configManager.getMqtt(mqttConfig);
+
+    auto hasSettings = configManager.getSettings(settings);
 
     if (mqttConfig.pin1Topic == "" && mqttConfig.pin3Topic == "")
     {
@@ -199,6 +208,26 @@ void setup()
 
 void loop()
 {
+    ArduinoOTA.handle();
+
+    if (checkUpdates.ready() && settings.updateServerUrl != "")
+    {
+        Serial.println("Checking updates");
+
+        switch (ESPhttpUpdate.update(settings.updateServerUrl))
+        {
+        case HTTP_UPDATE_FAILED:
+            Serial.println("[update] Update failed.");
+            break;
+        case HTTP_UPDATE_NO_UPDATES:
+            Serial.println("[update] Update no Update.");
+            break;
+        case HTTP_UPDATE_OK:
+            Serial.println("[update] Update ok."); // may not called we reboot the ESP
+            break;
+        }
+    }
+
     if (WiFi.status() == WL_CONNECTED)
     {
         if (mqttConnectedTimer.ready())

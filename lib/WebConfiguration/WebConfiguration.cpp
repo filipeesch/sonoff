@@ -16,6 +16,8 @@ void WebConfiguration::configure()
 {
     homePage();
     statusPage();
+    settingsPage();
+    saveSettingsPage();
     wifiPage();
     saveWifiPage();
     mqttPage();
@@ -55,6 +57,7 @@ void WebConfiguration::homePage()
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
             body->ul([](HtmlBuilder *ul) {
                 ul->li()->a("/status", "Status");
+                ul->li()->a("/settings", "Settings");
                 ul->li()->a("/wifi", "Wi-Fi");
                 ul->li()->a("/mqtt", "MQTT");
                 ul->li()->a("/reboot", [](HtmlBuilder *a) {
@@ -66,6 +69,54 @@ void WebConfiguration::homePage()
                     a->attr("onclick", "return confirm('Really want to Factory Reset?')");
                 });
             });
+        });
+
+        server.send(200, "text/html", html.build());
+    });
+}
+
+void WebConfiguration::settingsPage()
+{
+    server.on("/settings", [this]() {
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+
+            body->form("/settings-save", "POST", [](HtmlBuilder *form) {
+
+                SettingsConfiguration config;
+                ConfigurationManager configManager;
+                configManager.getSettings(config);
+
+                form->div()->label("Update Server Url:");
+                form->div()->input("text", "updateServerUrl", config.updateServerUrl)->attr("required");
+
+                form->br();
+                form->div()->input("submit", "submit", "Save");
+            });
+        });
+
+        server.send(200, "text/html", html.build());
+    });
+}
+
+void WebConfiguration::saveSettingsPage()
+{
+    server.on("/settings-save", [this]() {
+
+        SettingsConfiguration config;
+
+        config.updateServerUrl = server.arg("updateServerUrl");
+
+        configManager.setSettings(config);
+
+        HtmlTag htmlTag;
+        HtmlBuilder html(&htmlTag);
+
+        createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Settings saved.");
         });
 
         server.send(200, "text/html", html.build());

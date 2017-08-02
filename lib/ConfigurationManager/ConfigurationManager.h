@@ -1,6 +1,11 @@
 #ifndef CONFIGURATION_MANAGER_H
 #define CONFIGURATION_MANAGER_H
 
+struct SettingsConfiguration
+{
+    String updateServerUrl;
+};
+
 struct MqttConfiguration
 {
     String name;
@@ -25,11 +30,15 @@ struct WiFiConfiguration
 class ConfigurationManager
 {
   private:
+    const char *settingsConfigFile = "settings";
     const char *wifiConfigFile = "wifi.txt";
     const char *mqttConfigFile = "mqtt.txt";
 
   public:
     void clearConfig();
+
+    void setSettings(SettingsConfiguration &);
+    bool getSettings(SettingsConfiguration &);
 
     void setWiFi(WiFiConfiguration &);
     bool getWiFi(WiFiConfiguration &);

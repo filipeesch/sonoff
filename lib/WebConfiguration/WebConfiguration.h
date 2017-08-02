@@ -15,6 +15,8 @@ class WebConfiguration
     void createMasterPage(HtmlBuilder &, RenderPageHandler);
     void statusPage();
     void homePage();
+    void settingsPage();
+    void saveSettingsPage();
     void wifiPage();
     void saveWifiPage();
     void mqttPage();
