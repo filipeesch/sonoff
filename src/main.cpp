@@ -1,14 +1,12 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <FS.h>
 #include <string.h>
 #include <Bounce2.h>
 #include <ESP8266mDNS.h>
 #include <ArduinoOTA.h>
-#include <WiFiUdp.h>
 #include <ESP8266httpUpdate.h>
 
 #include <PubSubClient.h>
@@ -36,7 +34,7 @@ Timer mqttConnectedTimer(5000);
 Timer wifiConnectedTimer(1000);
 Timer wifiReconnectedTimer(30 * 1000);
 Timer apModeTimer(5 * 60 * 1000);
-Timer checkUpdates(1 * 60 * 1000);
+Timer checkUpdates(5 * 60 * 1000);
 
 bool apModeOn = false, mqttEnabled = false;
 
@@ -66,6 +64,7 @@ bool connectWifi()
         enableAPMode();
         return false;
     }
+    
 
     WiFi.begin(wifiConfig.ssid.c_str(), wifiConfig.password.c_str());
 
@@ -80,6 +79,12 @@ bool connectWifi()
 
     WiFi.softAPdisconnect(true);
     apModeOn = false;
+
+    if (mqttEnabled)
+    {
+        if (MDNS.begin(mqttConfig.name.c_str()))
+            Serial.println("mDNS responder started");
+    }
 
     Serial.println("\nWi-Fi Connected!");
     Serial.print("IP address: ");
@@ -199,6 +204,10 @@ void setup()
     if (connectWifi())
         connectMqtt();
 
+    MDNS.addService("http", "tcp", 80);
+    if (mqttEnabled)
+        MDNS.addService("mqtt", "tcp", mqttConfig.port);
+
     webConfig.configure();
 
     server.begin();
@@ -214,16 +223,16 @@ void loop()
     {
         Serial.println("Checking updates");
 
-        switch (ESPhttpUpdate.update(settings.updateServerUrl))
+        switch (ESPhttpUpdate.update(settings.updateServerUrl, ESP.getSketchMD5()))
         {
         case HTTP_UPDATE_FAILED:
             Serial.println("[update] Update failed.");
             break;
         case HTTP_UPDATE_NO_UPDATES:
-            Serial.println("[update] Update no Update.");
+            Serial.println("[update] No Update.");
             break;
         case HTTP_UPDATE_OK:
-            Serial.println("[update] Update ok."); // may not called we reboot the ESP
+            Serial.println("[update] Update OK!"); // may not called we reboot the ESP
             break;
         }
     }

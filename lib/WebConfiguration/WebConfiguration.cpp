@@ -333,6 +333,7 @@ void WebConfiguration::statusPage()
         HtmlBuilder html(&htmlTag);
 
         createMasterPage(html, [](HtmlBuilder *head, HtmlBuilder *body) {
+            body->div()->text("Sketch MD5: " + ESP.getSketchMD5());
             body->div()->text("Relay Pin: " + String(digitalRead(12)));
             body->div()->text("LED Pin: " + String(digitalRead(13)));
             body->div()->text("Pin 1: " + String(digitalRead(1)));
